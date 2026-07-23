@@ -45,6 +45,10 @@ system, which is intentionally omitted.**
 
 ## Deployment (shared/classic PHP hosting)
 
+For a Hostinger-specific, step-by-step walkthrough (in Hinglish), see
+[`HOSTINGER_DEPLOY.md`](./HOSTINGER_DEPLOY.md). The general steps below
+apply to any PHP + MySQL shared host.
+
 1. Point the host's document root at `php-app/public`.
 2. Copy `.env.example` to `.env` inside `php-app/` (one level above
    `public/`) and fill in production DB credentials and `APP_URL`.
