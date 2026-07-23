@@ -2,10 +2,6 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import { AnnouncementBar } from "@/components/layout/announcement-bar";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
-import { prisma } from "@/lib/prisma";
 import { siteConfig } from "@/lib/site-config";
 
 const playfair = Playfair_Display({
@@ -43,40 +39,26 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-async function getCategoriesSafe() {
-  try {
-    const categories = await prisma.category.findMany({
-      orderBy: { sortOrder: "asc" },
-      select: { name: true, slug: true, imageUrl: true },
-    });
-    return categories;
-  } catch {
-    return [];
-  }
-}
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: siteConfig.fullName,
+  url: siteConfig.url,
+  logo: `${siteConfig.url}/logo.png`,
+  sameAs: Object.values(siteConfig.social),
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: siteConfig.phone,
+    contactType: "customer service",
+    email: siteConfig.email,
+  },
+};
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const categories = await getCategoriesSafe();
-
-  const organizationJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: siteConfig.fullName,
-    url: siteConfig.url,
-    logo: `${siteConfig.url}/logo.png`,
-    sameAs: Object.values(siteConfig.social),
-    contactPoint: {
-      "@type": "ContactPoint",
-      telephone: siteConfig.phone,
-      contactType: "customer service",
-      email: siteConfig.email,
-    },
-  };
-
   return (
     <html lang="en" className={`${playfair.variable} ${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-brand-cream">
@@ -84,12 +66,7 @@ export default async function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
-        <Providers>
-          <AnnouncementBar />
-          <Header categories={categories} />
-          <main className="flex-1">{children}</main>
-          <Footer categories={categories} />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
