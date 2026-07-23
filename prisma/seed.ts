@@ -341,7 +341,7 @@ async function main() {
       const price = Math.round((minP + ((maxP - minP) * ((productIndex * 37) % 100)) / 100) / 10) * 10;
       const hasDiscount = productIndex % 3 === 0;
       const compareAtPrice = hasDiscount ? Math.round((price * 1.25) / 10) * 10 : null;
-      const stock = productIndex % 17 === 0 ? 0 : 8 + ((productIndex * 13) % 55);
+      const stock = productIndex > 0 && productIndex % 17 === 0 ? 0 : 8 + ((productIndex * 13) % 55);
       const colors = pick(COLORS, 3, productIndex);
       const sku = `CRM-${cat.slug.slice(0, 2).toUpperCase()}-${1000 + productIndex}`;
 

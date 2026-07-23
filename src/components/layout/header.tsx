@@ -11,6 +11,7 @@ import { useWishlistStore } from "@/lib/store/wishlist-store";
 import { useUIStore } from "@/lib/store/ui-store";
 import { siteConfig } from "@/lib/site-config";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { useMounted } from "@/lib/use-mounted";
 
 export interface HeaderCategory {
   name: string;
@@ -25,6 +26,7 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
   const [megaOpen, setMegaOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { mobileMenuOpen, setMobileMenuOpen, searchOpen, setSearchOpen, cartOpen, setCartOpen } = useUIStore();
+  const mounted = useMounted();
   const itemCount = useCartStore((s) => s.itemCount());
   const wishlistCount = useWishlistStore((s) => s.ids.size);
   const hydrateWishlist = useWishlistStore((s) => s.hydrate);
@@ -134,7 +136,7 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
               className="relative hidden h-10 w-10 items-center justify-center rounded-full text-brand-ink hover:bg-brand-cream-dark sm:flex"
             >
               <Heart size={19} />
-              {wishlistCount > 0 && (
+              {mounted && wishlistCount > 0 && (
                 <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[10px] text-white">
                   {wishlistCount}
                 </span>
@@ -146,7 +148,7 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
               className="relative flex h-10 w-10 items-center justify-center rounded-full text-brand-ink hover:bg-brand-cream-dark"
             >
               <ShoppingBag size={19} />
-              {itemCount > 0 && (
+              {mounted && itemCount > 0 && (
                 <span className="absolute right-0.5 top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand-primary text-[10px] text-white">
                   {itemCount}
                 </span>

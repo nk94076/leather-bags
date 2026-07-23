@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: "inline",
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    localPatterns: [{ pathname: "/api/placeholder" }],
   },
   eslint: {
     ignoreDuringBuilds: false,

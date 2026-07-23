@@ -18,7 +18,7 @@ export default auth((req) => {
     }
   }
 
-  if (pathname.startsWith("/account")) {
+  if (pathname.startsWith("/account") || pathname.startsWith("/checkout")) {
     if (!isLoggedIn) {
       const url = new URL("/login", req.nextUrl.origin);
       url.searchParams.set("callbackUrl", pathname);
@@ -30,5 +30,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/account/:path*"],
+  matcher: ["/admin/:path*", "/account/:path*", "/checkout/:path*"],
 };

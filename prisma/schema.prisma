@@ -332,6 +332,15 @@ model NewsletterSubscriber {
   createdAt DateTime @default(now())
 }
 
+model PasswordResetOtp {
+  id        String   @id @default(cuid())
+  email     String
+  codeHash  String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model ContactSubmission {
   id        String   @id @default(cuid())
   name      String

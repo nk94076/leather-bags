@@ -1,65 +1,153 @@
-import Image from "next/image";
+import { prisma } from "@/lib/prisma";
+import { productCardInclude, toProductCardData } from "@/lib/data/products";
+import { Hero } from "@/components/home/hero";
+import { CategoriesSection } from "@/components/home/categories-section";
+import { ProductGridSection } from "@/components/home/product-grid-section";
+import { TrendingCarousel } from "@/components/home/trending-carousel";
+import { PromoBanners } from "@/components/home/promo-banners";
+import { RecentlyViewed } from "@/components/home/recently-viewed";
+import { WhyChooseUs, type WhyChooseUsItem } from "@/components/home/why-choose-us";
+import { ReviewsSlider } from "@/components/home/reviews-slider";
+import { InstagramGallery } from "@/components/home/instagram-gallery";
+import { NewsletterSection } from "@/components/home/newsletter-section";
 
-export default function Home() {
+export const revalidate = 60;
+
+async function getHomepageData() {
+  const [categories, banners, sections, latestProducts, trendingProducts, reviews] = await Promise.all([
+    prisma.category.findMany({ orderBy: { sortOrder: "asc" }, take: 10 }),
+    prisma.banner.findMany({ where: { isActive: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.homepageSection.findMany(),
+    prisma.product.findMany({
+      where: { isActive: true, isLatest: true },
+      include: productCardInclude,
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    }),
+    prisma.product.findMany({
+      where: { isActive: true, isTrending: true },
+      include: productCardInclude,
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    }),
+    prisma.review.findMany({
+      where: { status: "APPROVED", rating: { gte: 4 } },
+      include: { product: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 9,
+    }),
+  ]);
+
+  const sectionMap = new Map(sections.map((s) => [s.key, s]));
+  return { categories, banners, sectionMap, latestProducts, trendingProducts, reviews };
+}
+
+export default async function HomePage() {
+  const { categories, banners, sectionMap, latestProducts, trendingProducts, reviews } = await getHomepageData();
+
+  const heroBanners = banners.filter((b) => b.placement === "hero");
+  const promoLeft = banners.find((b) => b.placement === "promo-left");
+  const promoRight = banners.find((b) => b.placement === "promo-right");
+
+  const categoriesSection = sectionMap.get("categories");
+  const latestSection = sectionMap.get("latest-products");
+  const trendingSection = sectionMap.get("trending-products");
+  const whyChooseSection = sectionMap.get("why-choose-us");
+  const reviewsSection = sectionMap.get("reviews");
+  const instagramSection = sectionMap.get("instagram");
+  const newsletterSection = sectionMap.get("newsletter");
+
+  const whyChooseItems: WhyChooseUsItem[] = whyChooseSection
+    ? (JSON.parse(whyChooseSection.content).items ?? [])
+    : [];
+  const instagramImages: string[] = instagramSection ? JSON.parse(instagramSection.content).images ?? [] : [];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <>
+      <Hero
+        slides={heroBanners.map((b) => ({
+          title: b.title,
+          subtitle: b.subtitle,
+          ctaLabel: b.ctaLabel,
+          ctaUrl: b.ctaUrl,
+          imageUrl: b.imageUrl,
+        }))}
+      />
+
+      <CategoriesSection
+        title={categoriesSection?.title ?? "Shop by Category"}
+        subtitle={categoriesSection?.subtitle}
+        categories={categories}
+      />
+
+      <ProductGridSection
+        eyebrow="Just Arrived"
+        title={latestSection?.title ?? "Latest Arrivals"}
+        subtitle={latestSection?.subtitle}
+        products={latestProducts.map(toProductCardData)}
+        viewAllHref="/shop?sort=latest"
+      />
+
+      <TrendingCarousel
+        title={trendingSection?.title ?? "Trending Now"}
+        subtitle={trendingSection?.subtitle}
+        products={trendingProducts.map(toProductCardData)}
+      />
+
+      <PromoBanners
+        left={
+          promoLeft && {
+            title: promoLeft.title,
+            subtitle: promoLeft.subtitle,
+            ctaLabel: promoLeft.ctaLabel,
+            ctaUrl: promoLeft.ctaUrl,
+            imageUrl: promoLeft.imageUrl,
+          }
+        }
+        right={
+          promoRight && {
+            title: promoRight.title,
+            subtitle: promoRight.subtitle,
+            ctaLabel: promoRight.ctaLabel,
+            ctaUrl: promoRight.ctaUrl,
+            imageUrl: promoRight.imageUrl,
+          }
+        }
+      />
+
+      <RecentlyViewed />
+
+      {whyChooseItems.length > 0 && (
+        <WhyChooseUs
+          title={whyChooseSection?.title ?? "Why Choose Corium"}
+          subtitle={whyChooseSection?.subtitle}
+          items={whyChooseItems}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      )}
+
+      <ReviewsSlider
+        title={reviewsSection?.title ?? "Loved by Our Customers"}
+        subtitle={reviewsSection?.subtitle}
+        reviews={reviews.map((r) => ({
+          id: r.id,
+          authorName: r.authorName,
+          rating: r.rating,
+          title: r.title,
+          comment: r.comment,
+          productName: r.product.name,
+        }))}
+      />
+
+      <InstagramGallery
+        title={instagramSection?.title ?? "Follow @corium.leather"}
+        subtitle={instagramSection?.subtitle}
+        images={instagramImages}
+      />
+
+      <NewsletterSection
+        title={newsletterSection?.title ?? "Join the Corium Circle"}
+        subtitle={newsletterSection?.subtitle}
+      />
+    </>
   );
 }
