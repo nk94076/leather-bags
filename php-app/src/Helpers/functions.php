@@ -116,7 +116,24 @@ function current_url_query(array $overrides = []): string
 }
 
 /**
- * Save an uploaded file (a single entry from $_FILES) into public/uploads/{folder}/
+ * The true, web-accessible document root — where index.php/.htaccess actually
+ * live. Prefers the APP_PUBLIC_DIR constant index.php defines (authoritative,
+ * correct under any deployment layout), then $_SERVER['DOCUMENT_ROOT'], then
+ * falls back to the conventional php-app/public path for CLI contexts.
+ */
+function admin_web_root(): string
+{
+    if (defined('APP_PUBLIC_DIR')) {
+        return APP_PUBLIC_DIR;
+    }
+    if (!empty($_SERVER['DOCUMENT_ROOT'])) {
+        return $_SERVER['DOCUMENT_ROOT'];
+    }
+    return dirname(__DIR__, 2) . '/public';
+}
+
+/**
+ * Save an uploaded file (a single entry from $_FILES) into {web root}/uploads/{folder}/
  * and record it in media_assets. Returns the public URL or null on failure.
  */
 function admin_save_upload(array $file, string $folder, string $altText = ''): ?string
@@ -142,7 +159,7 @@ function admin_save_upload(array $file, string $folder, string $altText = ''): ?
     $ext = $allowedTypes[$mime];
     $filename = ((string) round(microtime(true) * 1000)) . '-' . random_int(100000000, 999999999) . $ext;
 
-    $uploadDir = dirname(__DIR__, 2) . '/public/uploads/' . $safeFolder;
+    $uploadDir = rtrim(admin_web_root(), '/') . '/uploads/' . $safeFolder;
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }

@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+// The directory this file actually lives in is always the true, web-accessible
+// document root — regardless of where the app source (src/, database/) is
+// deployed relative to it. admin_save_upload() relies on this to save files
+// where they're actually reachable over HTTP.
+define('APP_PUBLIC_DIR', __DIR__);
+
 $root = dirname(__DIR__);
 
 spl_autoload_register(function (string $class) use ($root) {
