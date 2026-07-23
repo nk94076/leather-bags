@@ -276,8 +276,9 @@ require __DIR__ . '/../Views/layout_open.php';
 
   <div id="new-address-form" class="hidden mt-8 max-w-2xl rounded-2xl border border-black/10 p-6">
     <h3 class="mb-4 font-display text-lg text-brand-ink">Add New Address</h3>
-    <form action="<?= e(base_url('/checkout/address/add')) ?>" method="post" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <form action="<?= e(base_url('/address/add')) ?>" method="post" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <?= csrf_field() ?>
+      <input type="hidden" name="redirect" value="/checkout">
       <label class="flex flex-col gap-1.5 sm:col-span-2">
         <span class="text-xs font-medium uppercase tracking-wide text-brand-secondary">Label</span>
         <input name="label" required placeholder="Home, Work, etc." class="input-field">

@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
+$redirectTo = $_POST['redirect'] ?? '/checkout';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !csrf_verify()) {
-    redirect('/checkout');
+    redirect($redirectTo);
 }
 
 $authUser = Auth::user();
@@ -16,12 +18,13 @@ $line2 = trim((string) ($_POST['line2'] ?? ''));
 $city = trim((string) ($_POST['city'] ?? ''));
 $state = trim((string) ($_POST['state'] ?? ''));
 $postalCode = trim((string) ($_POST['postal_code'] ?? ''));
-$type = in_array($_POST['type'] ?? 'HOME', ['HOME', 'WORK', 'OTHER'], true) ? $_POST['type'] : 'HOME';
+$typeInput = $_POST['type'] ?? 'HOME';
+$type = in_array($typeInput, ['HOME', 'WORK', 'OTHER'], true) ? $typeInput : 'HOME';
 
 if ($label === '' || mb_strlen($fullName) < 2 || mb_strlen($phone) < 10 || mb_strlen($line1) < 3
     || mb_strlen($city) < 2 || mb_strlen($state) < 2 || mb_strlen($postalCode) < 4) {
     flash_set('error', 'Please fill in all required address fields correctly.');
-    redirect('/checkout');
+    redirect($redirectTo);
 }
 
 $countStmt = $pdo->prepare('SELECT COUNT(*) AS c FROM addresses WHERE user_id = ?');
@@ -43,4 +46,5 @@ $insert->execute([
 $newId = (int) $pdo->lastInsertId();
 
 flash_set('success', 'Address saved.');
-redirect('/checkout?address=' . $newId);
+$separator = str_contains($redirectTo, '?') ? '&' : '?';
+redirect($redirectTo . $separator . 'address=' . $newId);
