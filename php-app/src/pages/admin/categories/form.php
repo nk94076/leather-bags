@@ -35,18 +35,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $bannerUrl = $category['banner_url'] ?? '';
 
         if (!empty($_FILES['image']['tmp_name'])) {
-            $uploaded = admin_save_upload($_FILES['image'], 'categories', $name);
+            $uploadError = null;
+            $uploaded = admin_save_upload($_FILES['image'], 'categories', $name, $uploadError);
             if ($uploaded) {
                 $imageUrl = $uploaded;
+            } elseif ($uploadError) {
+                $errors[] = 'Category image upload failed: ' . $uploadError;
             }
         } elseif (!empty($_POST['generate_placeholders']) && $imageUrl === '') {
             $imageUrl = placeholder_url('category', $slug, 900, 1200);
         }
 
         if (!empty($_FILES['banner']['tmp_name'])) {
-            $uploaded = admin_save_upload($_FILES['banner'], 'categories', $name . ' banner');
+            $uploadError = null;
+            $uploaded = admin_save_upload($_FILES['banner'], 'categories', $name . ' banner', $uploadError);
             if ($uploaded) {
                 $bannerUrl = $uploaded;
+            } elseif ($uploadError) {
+                $errors[] = 'Banner image upload failed: ' . $uploadError;
             }
         } elseif (!empty($_POST['generate_placeholders']) && $bannerUrl === '') {
             $bannerUrl = placeholder_url('banner', $slug . '-banner', 1600, 500);

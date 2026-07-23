@@ -59,8 +59,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
         flash_set('success', 'Why Choose Us updated.');
     } elseif ($formType === 'instagram') {
         $lines = array_values(array_filter(array_map('trim', explode("\n", (string) ($_POST['images'] ?? '')))));
+        $uploadError = null;
         if (!empty($_FILES['new_image']['tmp_name'])) {
-            $uploaded = admin_save_upload($_FILES['new_image'], 'instagram', 'Instagram gallery image');
+            $uploaded = admin_save_upload($_FILES['new_image'], 'instagram', 'Instagram gallery image', $uploadError);
             if ($uploaded) {
                 $lines[] = $uploaded;
             }
@@ -69,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             $pdo, 'instagram', trim((string) ($_POST['title'] ?? '')), trim((string) ($_POST['subtitle'] ?? '')),
             true, ['images' => $lines]
         );
-        flash_set('success', 'Instagram gallery updated.');
+        flash_set($uploadError ? 'error' : 'success', $uploadError ? ('Instagram gallery saved, but image upload failed: ' . $uploadError) : 'Instagram gallery updated.');
     } elseif ($formType === 'banner_save') {
         $bannerId = (int) ($_POST['banner_id'] ?? 0);
         $placement = (string) ($_POST['placement'] ?? '');
@@ -80,8 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
         $isActive = !empty($_POST['is_active']) ? 1 : 0;
 
         $imageUrl = (string) ($_POST['existing_image_url'] ?? '');
+        $uploadError = null;
         if (!empty($_FILES['image']['tmp_name'])) {
-            $uploaded = admin_save_upload($_FILES['image'], 'banners', $title);
+            $uploaded = admin_save_upload($_FILES['image'], 'banners', $title, $uploadError);
             if ($uploaded) {
                 $imageUrl = $uploaded;
             }
@@ -89,7 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             $imageUrl = placeholder_url('banner', $placement . '-' . time(), 1600, 800);
         }
 
-        if ($title !== '' && $imageUrl !== '') {
+        if ($uploadError) {
+            flash_set('error', 'Image upload failed: ' . $uploadError);
+        } elseif ($title !== '' && $imageUrl !== '') {
             if ($bannerId > 0) {
                 $pdo->prepare('UPDATE banners SET title=?, subtitle=?, cta_label=?, cta_url=?, image_url=?, is_active=? WHERE id=?')
                     ->execute([$title, $subtitle ?: null, $ctaLabel ?: null, $ctaUrl ?: null, $imageUrl, $isActive, $bannerId]);

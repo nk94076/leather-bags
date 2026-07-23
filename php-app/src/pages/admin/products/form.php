@@ -123,12 +123,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'error' => $_FILES['new_images']['error'][$i],
                         'size' => $_FILES['new_images']['size'][$i],
                     ];
-                    $url = admin_save_upload($file, 'products', $name);
+                    $uploadError = null;
+                    $url = admin_save_upload($file, 'products', $name, $uploadError);
                     if ($url) {
                         $pdo->prepare('INSERT INTO product_images (product_id, url, alt_text, sort_order) VALUES (?,?,?,?)')
                             ->execute([$productId, $url, $name . ' - view ' . ($nextSort + 1), $nextSort]);
                         $nextSort++;
                         $uploadedAny = true;
+                    } elseif ($uploadError) {
+                        $errors[] = 'Image upload failed: ' . $uploadError;
                     }
                 }
             }

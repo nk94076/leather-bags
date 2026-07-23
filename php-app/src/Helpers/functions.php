@@ -117,14 +117,21 @@ function current_url_query(array $overrides = []): string
 
 /**
  * The true, web-accessible document root — where index.php/.htaccess actually
- * live. Prefers the APP_PUBLIC_DIR constant index.php defines (authoritative,
- * correct under any deployment layout), then $_SERVER['DOCUMENT_ROOT'], then
- * falls back to the conventional php-app/public path for CLI contexts.
+ * live. Tries, in order: the APP_PUBLIC_DIR constant index.php defines (most
+ * authoritative, but requires index.php to have been redeployed); the
+ * directory of the actually-executing front controller via
+ * $_SERVER['SCRIPT_FILENAME'] (set correctly by every SAPI — CGI, FPM,
+ * mod_php — regardless of DOCUMENT_ROOT quirks, and needs no other file to
+ * cooperate); $_SERVER['DOCUMENT_ROOT'] (some CGI setups leave this empty);
+ * finally the conventional php-app/public path for CLI contexts.
  */
 function admin_web_root(): string
 {
     if (defined('APP_PUBLIC_DIR')) {
         return APP_PUBLIC_DIR;
+    }
+    if (!empty($_SERVER['SCRIPT_FILENAME']) && is_file($_SERVER['SCRIPT_FILENAME'])) {
+        return dirname($_SERVER['SCRIPT_FILENAME']);
     }
     if (!empty($_SERVER['DOCUMENT_ROOT'])) {
         return $_SERVER['DOCUMENT_ROOT'];
@@ -135,10 +142,14 @@ function admin_web_root(): string
 /**
  * Save an uploaded file (a single entry from $_FILES) into {web root}/uploads/{folder}/
  * and record it in media_assets. Returns the public URL or null on failure.
+ * Pass $error by reference to get a human-readable reason when it fails.
  */
-function admin_save_upload(array $file, string $folder, string $altText = ''): ?string
+function admin_save_upload(array $file, string $folder, string $altText = '', ?string &$error = null): ?string
 {
+    $error = null;
+
     if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+        $error = 'No file was received by the server.';
         return null;
     }
 
@@ -148,9 +159,11 @@ function admin_save_upload(array $file, string $folder, string $altText = ''): ?
     ];
     $mime = mime_content_type($file['tmp_name']) ?: '';
     if (!isset($allowedTypes[$mime])) {
+        $error = 'Unsupported file type (' . $mime . '). Use JPG, PNG, WebP, GIF or SVG.';
         return null;
     }
     if ($file['size'] > 5 * 1024 * 1024) {
+        $error = 'File is larger than 5MB.';
         return null;
     }
 
@@ -159,12 +172,27 @@ function admin_save_upload(array $file, string $folder, string $altText = ''): ?
     $ext = $allowedTypes[$mime];
     $filename = ((string) round(microtime(true) * 1000)) . '-' . random_int(100000000, 999999999) . $ext;
 
-    $uploadDir = rtrim(admin_web_root(), '/') . '/uploads/' . $safeFolder;
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
+    $webRoot = rtrim(admin_web_root(), '/');
+    $uploadDir = $webRoot . '/uploads/' . $safeFolder;
+
+    // Create /uploads and /uploads/{folder} if either is missing, tolerating
+    // a race where another request creates it in between the check and the
+    // mkdir call.
+    if (!is_dir($uploadDir) && !@mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
+        $error = "Could not create the upload folder at $uploadDir — the web server user needs write "
+            . "permission on $webRoot (try setting /uploads to 775 or 755 in File Manager).";
+        return null;
+    }
+    if (!is_writable($uploadDir)) {
+        @chmod($uploadDir, 0775);
+        if (!is_writable($uploadDir)) {
+            $error = "Upload folder exists but isn't writable: $uploadDir — fix its permissions (775) in File Manager.";
+            return null;
+        }
     }
 
     if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $filename)) {
+        $error = "The server could not save the file to $uploadDir/$filename.";
         return null;
     }
 

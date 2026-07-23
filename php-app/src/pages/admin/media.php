@@ -8,8 +8,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
 
     if ($action === 'upload' && !empty($_FILES['file']['tmp_name'])) {
         $folder = trim((string) ($_POST['folder'] ?? 'general')) ?: 'general';
-        $url = admin_save_upload($_FILES['file'], $folder, $_FILES['file']['name'] ?? '');
-        flash_set($url ? 'success' : 'error', $url ? 'Image uploaded.' : 'Upload failed. Use JPG, PNG, WebP, GIF or SVG under 5MB.');
+        $uploadError = null;
+        $url = admin_save_upload($_FILES['file'], $folder, $_FILES['file']['name'] ?? '', $uploadError);
+        flash_set($url ? 'success' : 'error', $url ? 'Image uploaded.' : ('Upload failed. ' . ($uploadError ?? 'Use JPG, PNG, WebP, GIF or SVG under 5MB.')));
     } elseif ($action === 'delete') {
         $id = (int) ($_POST['media_id'] ?? 0);
         $pdo->prepare('DELETE FROM media_assets WHERE id = ?')->execute([$id]);
