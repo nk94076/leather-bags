@@ -1,0 +1,343 @@
+// Prisma schema for the Maison Cuir leather goods storefront.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  RETURNED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  COD
+  UPI
+  CARD
+  NETBANKING
+  WALLET
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum CouponType {
+  PERCENT
+  FLAT
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AddressType {
+  HOME
+  WORK
+  OTHER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  passwordHash  String
+  role          Role      @default(CUSTOMER)
+  avatarUrl     String?
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+  wishlist  WishlistItem[]
+  cartItems CartItem[]
+  reviews   Review[]
+}
+
+model Address {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String
+  type       AddressType @default(HOME)
+  fullName   String
+  phone      String
+  line1      String
+  line2      String?
+  city       String
+  state      String
+  postalCode String
+  country    String      @default("India")
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+
+  orders Order[]
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  imageUrl    String
+  bannerUrl   String?
+  icon        String?
+  metaTitle   String?
+  metaDesc    String?
+  sortOrder   Int      @default(0)
+  isFeatured  Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  sku             String   @unique
+  shortDescription String
+  description     String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  leatherType     String
+  price           Float
+  compareAtPrice  Float?
+  stock           Int      @default(0)
+  colors          String   // JSON array of {name, hex}
+  dimensions      String?
+  weight          String?
+  warranty        String?
+  careInstructions String?
+  isFeatured      Boolean  @default(false)
+  isTrending      Boolean  @default(false)
+  isLatest        Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  metaTitle       String?
+  metaDesc        String?
+  avgRating       Float    @default(0)
+  reviewCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  images        ProductImage[]
+  variants      ProductVariant[]
+  reviews       Review[]
+  orderItems    OrderItem[]
+  wishlistedBy  WishlistItem[]
+  cartOf        CartItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  altText   String
+  sortOrder Int     @default(0)
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  color     String
+  colorHex  String
+  sku       String  @unique
+  stock     Int     @default(0)
+  priceDiff Float   @default(0)
+
+  cartItems CartItem[]
+  orderItems OrderItem[]
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  productId  String
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId     String?
+  user       User?        @relation(fields: [userId], references: [id])
+  authorName String
+  rating     Int
+  title      String
+  comment    String
+  imageUrl   String?
+  status     ReviewStatus @default(APPROVED)
+  adminReply String?
+  createdAt  DateTime     @default(now())
+}
+
+model Coupon {
+  id              String     @id @default(cuid())
+  code            String     @unique
+  description     String
+  type            CouponType
+  value           Float
+  minOrderValue   Float      @default(0)
+  usageLimit      Int?
+  usedCount       Int        @default(0)
+  isActive        Boolean    @default(true)
+  expiresAt       DateTime?
+  createdAt       DateTime   @default(now())
+
+  orders Order[]
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model CartItem {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity  Int             @default(1)
+  createdAt DateTime        @default(now())
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  addressId       String?
+  address         Address?      @relation(fields: [addressId], references: [id])
+  shippingSnapshot String
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus @default(PENDING)
+  subtotal        Float
+  discount        Float         @default(0)
+  shippingFee     Float         @default(0)
+  tax             Float         @default(0)
+  total           Float
+  couponId        String?
+  coupon          Coupon?       @relation(fields: [couponId], references: [id])
+  trackingNumber  String?
+  trackingHistory String        @default("[]")
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  items OrderItem[]
+}
+
+model OrderItem {
+  id         String          @id @default(cuid())
+  orderId    String
+  order      Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product         @relation(fields: [productId], references: [id])
+  variantId  String?
+  variant    ProductVariant? @relation(fields: [variantId], references: [id])
+  productName String
+  productImage String
+  color      String?
+  price      Float
+  quantity   Int
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  placement String   // "hero" | "promo-left" | "promo-right" | "category" etc
+  title     String
+  subtitle  String?
+  ctaLabel  String?
+  ctaUrl    String?
+  imageUrl  String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+}
+
+model HomepageSection {
+  id        String   @id @default(cuid())
+  key       String   @unique // e.g. "hero", "announcement", "why-choose-us", "instagram", "newsletter"
+  title     String?
+  subtitle  String?
+  content   String   // JSON blob, shape depends on section
+  isVisible Boolean  @default(true)
+  sortOrder Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+model CmsPage {
+  id        String   @id @default(cuid())
+  slug      String   @unique // "about-us", "privacy-policy", ...
+  title     String
+  content   String   // JSON blob of structured sections
+  metaTitle String?
+  metaDesc  String?
+  updatedAt DateTime @updatedAt
+}
+
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String   @default("General")
+  sortOrder Int      @default(0)
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String // JSON blob
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String
+  altText   String
+  folder    String   @default("general")
+  createdAt DateTime @default(now())
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model ContactSubmission {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+}
