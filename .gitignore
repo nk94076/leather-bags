@@ -51,3 +51,6 @@ next-env.d.ts
 
 # PHP admin uploads (runtime user content, not source)
 /php-app/public/uploads/
+
+# One-off generated SQL exports (not source, regenerate via database/seed.php)
+/php-app/database/dist/
