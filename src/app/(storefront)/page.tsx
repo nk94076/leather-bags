@@ -10,8 +10,14 @@ import { WhyChooseUs, type WhyChooseUsItem } from "@/components/home/why-choose-
 import { ReviewsSlider } from "@/components/home/reviews-slider";
 import { InstagramGallery } from "@/components/home/instagram-gallery";
 import { NewsletterSection } from "@/components/home/newsletter-section";
+import { siteConfig } from "@/lib/site-config";
+import type { Metadata } from "next";
 
 export const revalidate = 60;
+
+export const metadata: Metadata = {
+  alternates: { canonical: siteConfig.url },
+};
 
 async function getHomepageData() {
   const [categories, banners, sections, latestProducts, trendingProducts, reviews] = await Promise.all([

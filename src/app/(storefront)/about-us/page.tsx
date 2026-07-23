@@ -4,12 +4,14 @@ import { getCmsPage } from "@/lib/data/cms";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { LinkButton } from "@/components/ui/button";
+import { siteConfig } from "@/lib/site-config";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getCmsPage("about-us");
   return {
     title: page?.metaTitle ?? "About Us",
     description: page?.metaDesc ?? "Learn about Corium Leather Co.",
+    alternates: { canonical: `${siteConfig.url}/about-us` },
   };
 }
 

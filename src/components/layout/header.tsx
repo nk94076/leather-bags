@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { Search, Heart, ShoppingBag, User, Menu, X, ChevronDown, LogOut, Package, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +10,7 @@ import { useWishlistStore } from "@/lib/store/wishlist-store";
 import { useUIStore } from "@/lib/store/ui-store";
 import { siteConfig } from "@/lib/site-config";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { SearchBar } from "@/components/layout/search-bar";
 import { useMounted } from "@/lib/use-mounted";
 
 export interface HeaderCategory {
@@ -21,7 +21,6 @@ export interface HeaderCategory {
 
 export function Header({ categories }: { categories: HeaderCategory[] }) {
   const { data: session, status } = useSession();
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -30,9 +29,6 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
   const itemCount = useCartStore((s) => s.itemCount());
   const wishlistCount = useWishlistStore((s) => s.ids.size);
   const hydrateWishlist = useWishlistStore((s) => s.hydrate);
-  const [query, setQuery] = useState("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
@@ -43,18 +39,6 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
   useEffect(() => {
     if (status === "authenticated") hydrateWishlist();
   }, [status, hydrateWishlist]);
-
-  useEffect(() => {
-    if (searchOpen) searchInputRef.current?.focus();
-  }, [searchOpen]);
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (!query.trim()) return;
-    router.push(`/shop?q=${encodeURIComponent(query.trim())}`);
-    setSearchOpen(false);
-    setQuery("");
-  }
 
   return (
     <>
@@ -198,24 +182,7 @@ export function Header({ categories }: { categories: HeaderCategory[] }) {
           </div>
         </div>
 
-        {searchOpen && (
-          <div className="border-t border-black/5 bg-white animate-fade-in">
-            <form onSubmit={handleSearch} className="mx-auto flex max-w-[1400px] items-center gap-3 px-4 py-4 sm:px-6 lg:px-10">
-              <Search size={18} className="text-black/40" />
-              <input
-                ref={searchInputRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                type="search"
-                placeholder="Search for bags, backpacks, wallets..."
-                className="w-full bg-transparent text-sm outline-none placeholder:text-black/40"
-              />
-              <button type="button" onClick={() => setSearchOpen(false)} aria-label="Close search">
-                <X size={18} className="text-black/40" />
-              </button>
-            </form>
-          </div>
-        )}
+        {searchOpen && <SearchBar onClose={() => setSearchOpen(false)} />}
       </header>
 
       {mobileMenuOpen && (
