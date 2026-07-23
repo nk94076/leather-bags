@@ -28,6 +28,13 @@ npm run dev
 
 Visit `http://localhost:3000`.
 
+### Deploying
+
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for step-by-step instructions for
+Hostinger's Node.js hosting (or any Passenger-based Node host). For a VPS or
+other host where you run the process yourself, `npm run build && npm start`
+is all you need.
+
 ### Demo accounts
 
 | Role     | Email                          | Password       |
