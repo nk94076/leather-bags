@@ -35,6 +35,14 @@ Hostinger's Node.js hosting (or any Passenger-based Node host). For a VPS or
 other host where you run the process yourself, `npm run build && npm start`
 is all you need.
 
+### PHP / MySQL edition
+
+For classic shared PHP hosting with no Node.js runtime, see
+[`php-app/README.md`](./php-app/README.md) — a parallel implementation of
+this same storefront and admin panel in vanilla PHP, MySQL, and a
+standalone-compiled Tailwind build, with full feature parity except the
+coupon/discount-code system.
+
 ### Demo accounts
 
 | Role     | Email                          | Password       |
