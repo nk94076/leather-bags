@@ -48,3 +48,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .scratch/
+
+# PHP admin uploads (runtime user content, not source)
+/php-app/public/uploads/

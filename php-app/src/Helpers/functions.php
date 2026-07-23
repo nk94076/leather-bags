@@ -114,3 +114,46 @@ function current_url_query(array $overrides = []): string
     }
     return http_build_query($params);
 }
+
+/**
+ * Save an uploaded file (a single entry from $_FILES) into public/uploads/{folder}/
+ * and record it in media_assets. Returns the public URL or null on failure.
+ */
+function admin_save_upload(array $file, string $folder, string $altText = ''): ?string
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+        return null;
+    }
+
+    $allowedTypes = [
+        'image/jpeg' => '.jpg', 'image/png' => '.png', 'image/webp' => '.webp',
+        'image/gif' => '.gif', 'image/svg+xml' => '.svg',
+    ];
+    $mime = mime_content_type($file['tmp_name']) ?: '';
+    if (!isset($allowedTypes[$mime])) {
+        return null;
+    }
+    if ($file['size'] > 5 * 1024 * 1024) {
+        return null;
+    }
+
+    $safeFolder = preg_replace('/[^a-z0-9\-_]/i', '', $folder) ?: 'general';
+    $safeFolder = substr($safeFolder, 0, 40);
+    $ext = $allowedTypes[$mime];
+    $filename = ((string) round(microtime(true) * 1000)) . '-' . random_int(100000000, 999999999) . $ext;
+
+    $uploadDir = dirname(__DIR__, 2) . '/public/uploads/' . $safeFolder;
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+
+    if (!move_uploaded_file($file['tmp_name'], $uploadDir . '/' . $filename)) {
+        return null;
+    }
+
+    $url = base_url('uploads/' . $safeFolder . '/' . $filename);
+    Database::pdo()->prepare('INSERT INTO media_assets (url, alt_text, folder) VALUES (?,?,?)')
+        ->execute([$url, $altText ?: $filename, $safeFolder]);
+
+    return $url;
+}
