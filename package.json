@@ -10,7 +10,9 @@
     "lint": "eslint",
     "db:seed": "tsx prisma/seed.ts",
     "db:push": "prisma db push",
-    "db:reset": "prisma db push --force-reset && npm run db:seed"
+    "db:reset": "prisma db push --force-reset && npm run db:seed",
+    "php:css:build": "tailwindcss -i php-app/tailwind-src/input.css -o php-app/public/assets/css/app.css --minify",
+    "php:css:watch": "tailwindcss -i php-app/tailwind-src/input.css -o php-app/public/assets/css/app.css --watch"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -37,6 +39,7 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
