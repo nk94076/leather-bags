@@ -29,6 +29,23 @@ $noindex = $noindex ?? false;
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= e(asset_url('css/app.css')) ?>">
 <script>window.APP_BASE_URL = <?= json_encode(base_url('/')) ?>;</script>
+<?php
+$social = get_setting('social', []);
+$organizationJsonLd = [
+    '@context' => 'https://schema.org',
+    '@type' => 'Organization',
+    'name' => $siteName,
+    'url' => base_url('/'),
+    'sameAs' => array_values(array_filter($social)),
+    'contactPoint' => [
+        '@type' => 'ContactPoint',
+        'telephone' => $general['phone'] ?? '',
+        'contactType' => 'customer service',
+        'email' => $general['email'] ?? '',
+    ],
+];
+?>
+<script type="application/ld+json"><?= json_encode($organizationJsonLd, JSON_UNESCAPED_SLASHES) ?></script>
 <?php if (!empty($jsonLd)): foreach ((array) $jsonLd as $block): ?>
 <script type="application/ld+json"><?= json_encode($block, JSON_UNESCAPED_SLASHES) ?></script>
 <?php endforeach; endif; ?>
