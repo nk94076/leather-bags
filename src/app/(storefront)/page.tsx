@@ -62,6 +62,10 @@ export default async function HomePage() {
     : [];
   const instagramImages: string[] = instagramSection ? JSON.parse(instagramSection.content).images ?? [] : [];
 
+  const isVisible = (section: { isVisible: boolean } | undefined) => section?.isVisible !== false;
+  const recentlyViewedSection = sectionMap.get("recently-viewed");
+  const promoBannersSection = sectionMap.get("promo-banners");
+
   return (
     <>
       <Hero
@@ -74,50 +78,58 @@ export default async function HomePage() {
         }))}
       />
 
-      <CategoriesSection
-        title={categoriesSection?.title ?? "Shop by Category"}
-        subtitle={categoriesSection?.subtitle}
-        categories={categories}
-      />
+      {isVisible(categoriesSection) && (
+        <CategoriesSection
+          title={categoriesSection?.title ?? "Shop by Category"}
+          subtitle={categoriesSection?.subtitle}
+          categories={categories}
+        />
+      )}
 
-      <ProductGridSection
-        eyebrow="Just Arrived"
-        title={latestSection?.title ?? "Latest Arrivals"}
-        subtitle={latestSection?.subtitle}
-        products={latestProducts.map(toProductCardData)}
-        viewAllHref="/shop?sort=latest"
-      />
+      {isVisible(latestSection) && (
+        <ProductGridSection
+          eyebrow="Just Arrived"
+          title={latestSection?.title ?? "Latest Arrivals"}
+          subtitle={latestSection?.subtitle}
+          products={latestProducts.map(toProductCardData)}
+          viewAllHref="/shop?sort=latest"
+        />
+      )}
 
-      <TrendingCarousel
-        title={trendingSection?.title ?? "Trending Now"}
-        subtitle={trendingSection?.subtitle}
-        products={trendingProducts.map(toProductCardData)}
-      />
+      {isVisible(trendingSection) && (
+        <TrendingCarousel
+          title={trendingSection?.title ?? "Trending Now"}
+          subtitle={trendingSection?.subtitle}
+          products={trendingProducts.map(toProductCardData)}
+        />
+      )}
 
-      <PromoBanners
-        left={
-          promoLeft && {
-            title: promoLeft.title,
-            subtitle: promoLeft.subtitle,
-            ctaLabel: promoLeft.ctaLabel,
-            ctaUrl: promoLeft.ctaUrl,
-            imageUrl: promoLeft.imageUrl,
+      {isVisible(promoBannersSection) && (
+        <PromoBanners
+          left={
+            promoLeft && {
+              title: promoLeft.title,
+              subtitle: promoLeft.subtitle,
+              ctaLabel: promoLeft.ctaLabel,
+              ctaUrl: promoLeft.ctaUrl,
+              imageUrl: promoLeft.imageUrl,
+            }
           }
-        }
-        right={
-          promoRight && {
-            title: promoRight.title,
-            subtitle: promoRight.subtitle,
-            ctaLabel: promoRight.ctaLabel,
-            ctaUrl: promoRight.ctaUrl,
-            imageUrl: promoRight.imageUrl,
+          right={
+            promoRight && {
+              title: promoRight.title,
+              subtitle: promoRight.subtitle,
+              ctaLabel: promoRight.ctaLabel,
+              ctaUrl: promoRight.ctaUrl,
+              imageUrl: promoRight.imageUrl,
+            }
           }
-        }
-      />
+        />
+      )}
 
-      <RecentlyViewed />
+      {isVisible(recentlyViewedSection) && <RecentlyViewed />}
 
-      {whyChooseItems.length > 0 && (
+      {isVisible(whyChooseSection) && whyChooseItems.length > 0 && (
         <WhyChooseUs
           title={whyChooseSection?.title ?? "Why Choose Corium"}
           subtitle={whyChooseSection?.subtitle}
@@ -125,29 +137,35 @@ export default async function HomePage() {
         />
       )}
 
-      <ReviewsSlider
-        title={reviewsSection?.title ?? "Loved by Our Customers"}
-        subtitle={reviewsSection?.subtitle}
-        reviews={reviews.map((r) => ({
-          id: r.id,
-          authorName: r.authorName,
-          rating: r.rating,
-          title: r.title,
-          comment: r.comment,
-          productName: r.product.name,
-        }))}
-      />
+      {isVisible(reviewsSection) && (
+        <ReviewsSlider
+          title={reviewsSection?.title ?? "Loved by Our Customers"}
+          subtitle={reviewsSection?.subtitle}
+          reviews={reviews.map((r) => ({
+            id: r.id,
+            authorName: r.authorName,
+            rating: r.rating,
+            title: r.title,
+            comment: r.comment,
+            productName: r.product.name,
+          }))}
+        />
+      )}
 
-      <InstagramGallery
-        title={instagramSection?.title ?? "Follow @corium.leather"}
-        subtitle={instagramSection?.subtitle}
-        images={instagramImages}
-      />
+      {isVisible(instagramSection) && (
+        <InstagramGallery
+          title={instagramSection?.title ?? "Follow @corium.leather"}
+          subtitle={instagramSection?.subtitle}
+          images={instagramImages}
+        />
+      )}
 
-      <NewsletterSection
-        title={newsletterSection?.title ?? "Join the Corium Circle"}
-        subtitle={newsletterSection?.subtitle}
-      />
+      {isVisible(newsletterSection) && (
+        <NewsletterSection
+          title={newsletterSection?.title ?? "Join the Corium Circle"}
+          subtitle={newsletterSection?.subtitle}
+        />
+      )}
     </>
   );
 }

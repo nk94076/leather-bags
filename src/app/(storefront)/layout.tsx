@@ -15,12 +15,23 @@ async function getCategoriesSafe() {
   }
 }
 
+async function getAnnouncementMessages() {
+  try {
+    const section = await prisma.homepageSection.findUnique({ where: { key: "announcement" } });
+    if (!section) return [];
+    const content = JSON.parse(section.content);
+    return (content.messages as string[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function StorefrontLayout({ children }: { children: React.ReactNode }) {
-  const categories = await getCategoriesSafe();
+  const [categories, announcementMessages] = await Promise.all([getCategoriesSafe(), getAnnouncementMessages()]);
 
   return (
     <>
-      <AnnouncementBar />
+      <AnnouncementBar messages={announcementMessages} />
       <Header categories={categories} />
       <main className="flex-1">{children}</main>
       <Footer categories={categories} />
