@@ -1,6 +1,6 @@
 <?php
-$sections = get_homepage_sections();
-$announcementContent = json_decode_assoc($sections['announcement']['content'] ?? null);
+$homepageSections = get_homepage_sections();
+$announcementContent = json_decode_assoc($homepageSections['announcement']['content'] ?? null);
 $messages = $announcementContent['messages'] ?? [
     'Free Shipping on All Orders Over ₹999',
     'Easy 15-Day Returns & Exchanges',
