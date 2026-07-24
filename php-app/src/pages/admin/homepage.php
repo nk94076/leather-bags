@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
 
         if ($uploadError) {
             flash_set('error', 'Image upload failed: ' . $uploadError);
-        } elseif ($title !== '' && $imageUrl !== '') {
+        } elseif ($imageUrl !== '') {
             if ($bannerId > 0) {
                 $pdo->prepare('UPDATE banners SET title=?, subtitle=?, cta_label=?, cta_url=?, image_url=?, is_active=? WHERE id=?')
                     ->execute([$title, $subtitle ?: null, $ctaLabel ?: null, $ctaUrl ?: null, $imageUrl, $isActive, $bannerId]);
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_verify()) {
             }
             flash_set('success', 'Banner saved.');
         } else {
-            flash_set('error', 'A banner needs a title and an image.');
+            flash_set('error', 'A banner needs an image.');
         }
     } elseif ($formType === 'banner_delete') {
         $pdo->prepare('DELETE FROM banners WHERE id = ?')->execute([(int) ($_POST['banner_id'] ?? 0)]);

@@ -15,7 +15,7 @@ $isNew = $b === null;
       <input type="hidden" name="existing_image_url" value="<?= e($b['image_url']) ?>">
     <?php endif; ?>
     <label class="flex flex-col gap-1.5">
-      <span class="text-xs font-medium uppercase tracking-wide text-brand-secondary">Title</span>
+      <span class="text-xs font-medium uppercase tracking-wide text-brand-secondary">Title (optional)</span>
       <input name="title" value="<?= e($b['title'] ?? '') ?>" placeholder="<?= $isNew ? 'New banner title' : '' ?>" class="input-field">
     </label>
     <label class="flex flex-col gap-1.5">
