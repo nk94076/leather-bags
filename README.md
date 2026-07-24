@@ -1,36 +1,109 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Corium — Premium Leather Bags eCommerce Platform
+
+A full-stack, production-architected eCommerce storefront and admin CMS for a premium
+leather goods brand, built with Next.js 15 (App Router), TypeScript, Prisma and
+Tailwind CSS v4.
+
+## Stack
+
+- **Framework:** Next.js 15 (App Router, Server Components, Route Handlers)
+- **Language:** TypeScript
+- **Database:** SQLite via Prisma ORM (swap the `datasource` provider for Postgres/MySQL in production)
+- **Auth:** Auth.js (NextAuth v5) with credentials + bcrypt password hashing, JWT sessions, role-based access (`CUSTOMER` / `ADMIN`)
+- **Styling:** Tailwind CSS v4 with a custom brand theme (CSS variables, admin-editable at runtime)
+- **State:** Zustand (cart, wishlist, recently-viewed, UI state) with `localStorage` persistence where appropriate
+- **Forms/validation:** react-hook-form + zod
+- **Charts:** Recharts (admin dashboard)
+- **Images:** A self-contained, deterministic SVG placeholder generator (`/api/placeholder`) — no third-party image CDN dependency, so the site never has broken images
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
+cp .env.example .env      # adjust NEXTAUTH_SECRET for production
+npm run db:push           # create the SQLite schema
+npm run db:seed           # seed 10 categories, 50 products, orders, CMS content, etc.
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Deploying
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See [`DEPLOYMENT.md`](./DEPLOYMENT.md) for step-by-step instructions for
+Hostinger's Node.js hosting (or any Passenger-based Node host). For a VPS or
+other host where you run the process yourself, `npm run build && npm start`
+is all you need.
 
-## Learn More
+### PHP / MySQL edition
 
-To learn more about Next.js, take a look at the following resources:
+For classic shared PHP hosting with no Node.js runtime, see
+[`php-app/README.md`](./php-app/README.md) — a parallel implementation of
+this same storefront and admin panel in vanilla PHP, MySQL, and a
+standalone-compiled Tailwind build, with full feature parity except the
+coupon/discount-code system.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Demo accounts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Role     | Email                          | Password       |
+| -------- | ------------------------------- | -------------- |
+| Admin    | admin@corium-leather.com        | Admin@12345    |
+| Customer | aarav.mehta@example.com         | Customer@123   |
 
-## Deploy on Vercel
+Admin panel: `/admin`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Useful scripts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `npm run dev` — start the dev server
+- `npm run build` / `npm run start` — production build & serve
+- `npm run lint` — ESLint
+- `npm run db:seed` — re-seed demo data (destructive — clears existing data first)
+- `npm run db:reset` — drop, recreate and reseed the database
+
+## Architecture
+
+```
+src/
+  app/
+    (storefront)/     Public storefront routes — its own layout with header/footer
+    admin/            Admin panel routes — separate layout/shell, role-gated
+    api/               Route handlers (public + /api/admin/* for admin mutations)
+  components/          UI components, grouped by domain (home, shop, product, admin, ...)
+  lib/                 Prisma client, auth config, Zustand stores, data-fetching helpers
+prisma/
+  schema.prisma        Full data model
+  seed.ts               Realistic demo data generator (no Lorem Ipsum)
+```
+
+The storefront and admin panel are split into separate route groups so each gets
+its own layout without one inheriting the other's chrome.
+
+## Content is fully CMS-driven
+
+Nothing on the homepage, static pages, or navigation is hardcoded — it's all backed
+by the database and editable from `/admin`:
+
+- **Homepage Manager** — announcement bar, hero & promo banner slides, every
+  section's heading/subtitle and visibility, "Why Choose Us" items, Instagram
+  gallery, newsletter copy
+- **Pages CMS** — About Us, Contact Us, Privacy Policy, Terms & Conditions,
+  Shipping & Return Policy, FAQs
+- **Settings** — branding, live-editable theme colors, social links, SEO/analytics
+  IDs, payment/shipping/tax configuration, currency, SMTP
+- **Media Manager** — real file uploads (stored under `public/uploads`, tracked in
+  the database)
+- **Products, Categories, Orders, Customers, Reviews, Coupons** — full CRUD
+
+Admin mutations call `revalidatePath` so storefront changes appear immediately.
+
+## Notes on scope
+
+- **Payments** are represented as selectable methods (COD, UPI, Card, Net Banking,
+  Wallet) with COD/GST fee logic; no live payment gateway is wired up. Swap in a
+  real gateway server-side in `src/app/api/orders/route.ts` before going live.
+- **OTP-based password reset** has no SMTP configured in this environment, so the
+  generated code is surfaced directly in the UI for demo purposes — wire this to a
+  real email/SMS provider (see Settings → SMTP) for production use.
+- **Database** is SQLite for zero-setup local development. The schema is
+  provider-agnostic Prisma; point `DATASOURCE_URL` at Postgres/MySQL and update
+  `provider` in `schema.prisma` for a production deployment.

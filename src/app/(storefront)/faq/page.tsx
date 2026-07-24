@@ -3,10 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { Container } from "@/components/ui/container";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 import { FaqAccordion } from "@/components/faq/faq-accordion";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Frequently Asked Questions",
   description: "Find answers to common questions about orders, shipping, returns, payments and product care at Corium.",
+  alternates: { canonical: `${siteConfig.url}/faq` },
 };
 
 export default async function FaqPage() {

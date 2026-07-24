@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
-import { Trash2, Wand2 } from "lucide-react";
+import { Trash2, Wand2, Upload } from "lucide-react";
 import { FormField, inputClass } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
 import { COLOR_PALETTE, LEATHER_TYPES } from "@/lib/constants";
@@ -72,9 +72,37 @@ export function ProductForm({
     }
   );
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+  }
+
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    setUploading(true);
+    const uploaded: { url: string; altText: string }[] = [];
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", "products");
+      formData.append("altText", values.name || file.name);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error ?? `Could not upload ${file.name}`);
+        continue;
+      }
+      uploaded.push({ url: data.url, altText: data.altText });
+    }
+    setUploading(false);
+    if (uploaded.length > 0) {
+      set("images", [...values.images, ...uploaded]);
+      toast.success(`${uploaded.length} image(s) uploaded`);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function toggleColor(c: { name: string; hex: string }) {
@@ -258,9 +286,23 @@ export function ProductForm({
           <div className="rounded-2xl border border-black/5 bg-white p-6">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="font-display text-lg text-brand-ink">Images</h2>
-              <button type="button" onClick={generatePlaceholderImages} className="flex items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
-                <Wand2 size={13} /> Generate
-              </button>
+              <div className="flex items-center gap-3">
+                <label className="flex cursor-pointer items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
+                  <Upload size={13} /> {uploading ? "Uploading..." : "Upload"}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                    className="hidden"
+                  />
+                </label>
+                <button type="button" onClick={generatePlaceholderImages} className="flex items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
+                  <Wand2 size={13} /> Generate
+                </button>
+              </div>
             </div>
             <div className="flex flex-col gap-3">
               {values.images.map((img, i) => (
@@ -285,7 +327,7 @@ export function ProductForm({
                 </div>
               ))}
               {values.images.length === 0 && (
-                <p className="text-xs text-black/40">No images yet. Click Generate to add placeholder photography.</p>
+                <p className="text-xs text-black/40">No images yet. Upload real photos or click Generate for placeholder photography.</p>
               )}
             </div>
           </div>
