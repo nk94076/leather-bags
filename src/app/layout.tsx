@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { ThemeStyleInjector } from "@/components/theme-style-injector";
 import { siteConfig } from "@/lib/site-config";
 
 const playfair = Playfair_Display({
@@ -66,6 +67,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
+        <ThemeStyleInjector />
         <Providers>{children}</Providers>
       </body>
     </html>

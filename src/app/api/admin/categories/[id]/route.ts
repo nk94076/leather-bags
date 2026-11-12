@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import slugify from "slugify";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/require-admin";
@@ -35,6 +36,9 @@ export async function PATCH(req: Request, { params }: Params) {
   if (conflict) return NextResponse.json({ error: "A category with this slug already exists" }, { status: 409 });
 
   const category = await prisma.category.update({ where: { id }, data: { ...parsed.data, slug } });
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath(`/shop/${slug}`);
   return NextResponse.json(category);
 }
 
@@ -49,5 +53,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   }
 
   await prisma.category.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/shop");
   return NextResponse.json({ ok: true });
 }

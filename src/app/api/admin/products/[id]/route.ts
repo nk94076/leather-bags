@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import slugify from "slugify";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/require-admin";
@@ -101,6 +102,9 @@ export async function PATCH(req: Request, { params }: Params) {
     },
   });
 
+  revalidatePath("/");
+  revalidatePath("/shop");
+  revalidatePath(`/product/${slug}`);
   return NextResponse.json(product);
 }
 
@@ -110,5 +114,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   const { id } = await params;
 
   await prisma.product.delete({ where: { id } });
+  revalidatePath("/");
+  revalidatePath("/shop");
   return NextResponse.json({ ok: true });
 }

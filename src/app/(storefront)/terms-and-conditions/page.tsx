@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCmsPage } from "@/lib/data/cms";
 import { LegalPage } from "@/components/legal/legal-page";
+import { siteConfig } from "@/lib/site-config";
 
 export async function generateMetadata(): Promise<Metadata> {
   const page = await getCmsPage("terms-and-conditions");
   return {
     title: page?.metaTitle ?? "Terms & Conditions",
     description: page?.metaDesc ?? "Read the Corium Leather Co. terms and conditions.",
+    alternates: { canonical: `${siteConfig.url}/terms-and-conditions` },
   };
 }
 

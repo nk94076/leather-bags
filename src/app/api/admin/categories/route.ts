@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import slugify from "slugify";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/require-admin";
@@ -40,5 +41,7 @@ export async function POST(req: Request) {
   if (existing) return NextResponse.json({ error: "A category with this slug already exists" }, { status: 409 });
 
   const category = await prisma.category.create({ data: { ...parsed.data, slug } });
+  revalidatePath("/");
+  revalidatePath("/shop");
   return NextResponse.json(category);
 }

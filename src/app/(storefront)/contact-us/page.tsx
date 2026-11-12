@@ -11,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: page?.metaTitle ?? "Contact Us",
     description: page?.metaDesc ?? "Get in touch with the Corium Leather Co. team.",
+    alternates: { canonical: `${siteConfig.url}/contact-us` },
   };
 }
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
 import slugify from "slugify";
-import { Wand2 } from "lucide-react";
+import { Wand2, Upload } from "lucide-react";
 import { FormField, inputClass } from "@/components/ui/form-field";
 import { Button } from "@/components/ui/button";
 import { placeholderUrl } from "@/lib/placeholder";
@@ -41,6 +41,10 @@ export function CategoryForm({ initial }: { initial?: CategoryFormValues }) {
     }
   );
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   function set<K extends keyof CategoryFormValues>(key: K, value: CategoryFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -50,6 +54,24 @@ export function CategoryForm({ initial }: { initial?: CategoryFormValues }) {
     const seed = values.slug || slugify(values.name || "category", { lower: true, strict: true });
     set("imageUrl", placeholderUrl("category", seed, { w: 900, h: 1200 }));
     set("bannerUrl", placeholderUrl("banner", `${seed}-banner`, { w: 1600, h: 500 }));
+  }
+
+  async function uploadFile(file: File, field: "imageUrl" | "bannerUrl") {
+    const setUploading = field === "imageUrl" ? setUploadingImage : setUploadingBanner;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "categories");
+    formData.append("altText", values.name || file.name);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    setUploading(false);
+    if (!res.ok) {
+      toast.error(data.error ?? "Upload failed");
+      return;
+    }
+    set(field, data.url);
+    toast.success("Image uploaded");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -97,17 +119,55 @@ export function CategoryForm({ initial }: { initial?: CategoryFormValues }) {
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-brand-ink">Images</span>
         <button type="button" onClick={generateImages} className="flex items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
-          <Wand2 size={13} /> Generate
+          <Wand2 size={13} /> Generate Placeholder
         </button>
       </div>
-      {values.imageUrl && (
-        <div className="flex gap-3">
-          <Image src={values.imageUrl} alt="" width={64} height={80} className="h-20 w-16 rounded-lg object-cover" />
-          {values.bannerUrl && (
-            <Image src={values.bannerUrl} alt="" width={128} height={80} className="h-20 w-32 rounded-lg object-cover" />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-black/50">Card / Thumbnail Image</p>
+          {values.imageUrl && (
+            <Image src={values.imageUrl} alt="" width={128} height={160} className="h-32 w-24 rounded-lg object-cover" />
           )}
+          <label className="flex w-fit cursor-pointer items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
+            <Upload size={13} /> {uploadingImage ? "Uploading..." : "Upload Image"}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              disabled={uploadingImage}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadFile(file, "imageUrl");
+                if (imageInputRef.current) imageInputRef.current.value = "";
+              }}
+              className="hidden"
+            />
+          </label>
         </div>
-      )}
+
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-black/50">Banner Image (category page hero)</p>
+          {values.bannerUrl && (
+            <Image src={values.bannerUrl} alt="" width={200} height={80} className="h-20 w-full max-w-[200px] rounded-lg object-cover" />
+          )}
+          <label className="flex w-fit cursor-pointer items-center gap-1 text-xs font-medium text-brand-primary hover:underline">
+            <Upload size={13} /> {uploadingBanner ? "Uploading..." : "Upload Banner"}
+            <input
+              ref={bannerInputRef}
+              type="file"
+              accept="image/*"
+              disabled={uploadingBanner}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadFile(file, "bannerUrl");
+                if (bannerInputRef.current) bannerInputRef.current.value = "";
+              }}
+              className="hidden"
+            />
+          </label>
+        </div>
+      </div>
 
       <FormField label="Meta Title">
         <input className={inputClass} value={values.metaTitle} onChange={(e) => set("metaTitle", e.target.value)} />

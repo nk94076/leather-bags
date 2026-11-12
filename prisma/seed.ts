@@ -424,7 +424,7 @@ async function main() {
 
   console.log("Seeding users...");
   const adminPassword = await bcrypt.hash("Admin@12345", 10);
-  const admin = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name: "Corium Admin",
       email: "admin@corium-leather.com",
