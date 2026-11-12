@@ -61,10 +61,9 @@ $siteName = $general['siteName'] ?? 'CORIUM';
 
     <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-brand-cream/50 sm:flex-row">
       <p>© <?= date('Y') ?> Corium Leather Co. All rights reserved.</p>
-      <div class="flex items-center gap-3">
-        <?php foreach (['Visa', 'Mastercard', 'UPI', 'RuPay', 'Amex'] as $p): ?>
-          <span class="rounded border border-white/15 px-2 py-1 text-[10px] font-semibold tracking-wide"><?= e($p) ?></span>
-        <?php endforeach; ?>
+      <div class="flex items-center gap-2 rounded border border-white/15 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4" stroke-linecap="round"/></svg>
+        Cash on Delivery Only
       </div>
     </div>
   </div>

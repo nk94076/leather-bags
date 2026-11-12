@@ -84,6 +84,13 @@ if ($authUser) {
     </div>
   </div>
 
+  <div class="border-t border-black/5 bg-brand-primary/10">
+    <div class="mx-auto flex max-w-[1400px] items-center justify-center gap-2 px-4 py-1.5 sm:px-6 lg:px-10">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-brand-primary"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4" stroke-linecap="round"/></svg>
+      <span class="text-[11px] font-semibold uppercase tracking-wider text-brand-primary">Cash on Delivery Only</span>
+    </div>
+  </div>
+
   <div id="search-panel" class="hidden border-t border-black/5 bg-white">
     <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10">
       <form action="<?= e(base_url('/shop')) ?>" method="get" class="flex items-center gap-3 py-4">

@@ -121,10 +121,9 @@ require __DIR__ . '/../Views/layout_open.php';
 
         <a href="<?= e(base_url('/checkout')) ?>" class="btn-primary mt-6 block w-full text-center">Proceed to Checkout</a>
 
-        <div class="mt-4 flex flex-wrap items-center gap-2 text-[10px] text-black/40">
-          <?php foreach (['Visa', 'Mastercard', 'UPI', 'COD'] as $p): ?>
-            <span class="rounded border border-black/10 px-2 py-1"><?= e($p) ?></span>
-          <?php endforeach; ?>
+        <div class="mt-4 flex items-center gap-1.5 text-[10px] text-black/40">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4" stroke-linecap="round"/></svg>
+          Cash on Delivery Only
         </div>
       </div>
     </div>

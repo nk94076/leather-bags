@@ -4,14 +4,6 @@ declare(strict_types=1);
 $authUser = Auth::user();
 $pdo = Database::pdo();
 
-$PAYMENT_METHODS = [
-    ['value' => 'COD', 'label' => 'Cash on Delivery', 'note' => '₹49 handling fee applies'],
-    ['value' => 'UPI', 'label' => 'UPI', 'note' => 'GPay, PhonePe, Paytm & more'],
-    ['value' => 'CARD', 'label' => 'Credit / Debit Card', 'note' => 'Visa, Mastercard, RuPay, Amex'],
-    ['value' => 'NETBANKING', 'label' => 'Net Banking', 'note' => 'All major Indian banks'],
-    ['value' => 'WALLET', 'label' => 'Wallet', 'note' => 'Paytm, Amazon Pay & more'],
-];
-
 $shippingSettings = get_setting('shipping');
 $taxSettings = get_setting('tax');
 $freeShippingThreshold = (float) ($shippingSettings['freeShippingThreshold'] ?? 999);
@@ -25,10 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $addressId = (int) ($_POST['address_id'] ?? 0);
-    $paymentMethod = $_POST['payment_method'] ?? 'COD';
-    if (!in_array($paymentMethod, array_column($PAYMENT_METHODS, 'value'), true)) {
-        $paymentMethod = 'COD';
-    }
+    $paymentMethod = 'COD';
 
     $cart = $_SESSION['cart'] ?? [];
     if (empty($cart)) {
@@ -78,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $shippingFee = $subtotal >= $freeShippingThreshold ? 0.0 : $standardFee;
-    $codFee = $paymentMethod === 'COD' ? 49.0 : 0.0;
+    $codFee = 49.0;
     $tax = round($subtotal * ($gstPercent / 100));
     $total = $subtotal + $shippingFee + $codFee + $tax;
 
@@ -226,21 +215,17 @@ require __DIR__ . '/../Views/layout_open.php';
 
       <section>
         <h2 class="mb-4 font-display text-lg text-brand-ink">Payment Method</h2>
-        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <?php foreach ($PAYMENT_METHODS as $i => $m): $checked = $i === 0; ?>
-            <label class="flex cursor-pointer items-center gap-3 rounded-2xl border p-4 text-left transition has-[:checked]:border-brand-primary has-[:checked]:bg-brand-cream border-black/10 hover:border-black/20">
-              <input type="radio" name="payment_method" value="<?= e($m['value']) ?>" data-cod-toggle <?= $checked ? 'checked' : '' ?> class="h-4 w-4 accent-brand-primary">
-              <div>
-                <p class="text-sm font-medium text-brand-ink"><?= e($m['label']) ?></p>
-                <p class="text-xs text-black/50"><?= e($m['note']) ?></p>
-              </div>
-            </label>
-          <?php endforeach; ?>
+        <div class="flex items-center gap-3 rounded-2xl border border-brand-primary bg-brand-cream p-4">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="shrink-0 text-brand-primary"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4" stroke-linecap="round"/></svg>
+          <div>
+            <p class="text-sm font-medium text-brand-ink">Cash on Delivery</p>
+            <p class="text-xs text-black/50">Pay with cash when your order is delivered. A ₹49 handling fee applies.</p>
+          </div>
         </div>
       </section>
     </div>
 
-    <div class="h-fit rounded-2xl border border-black/5 bg-white p-6" data-order-summary data-subtotal="<?= $subtotal ?>" data-shipping="<?= $shippingFee ?>" data-tax="<?= $tax ?>">
+    <div class="h-fit rounded-2xl border border-black/5 bg-white p-6">
       <h2 class="mb-5 font-display text-lg text-brand-ink">Order Summary</h2>
       <div class="flex max-h-64 flex-col gap-4 overflow-y-auto pr-1">
         <?php foreach ($cart as $l): ?>
@@ -262,12 +247,12 @@ require __DIR__ . '/../Views/layout_open.php';
         <div class="flex justify-between text-black/60"><span>Subtotal</span><span><?= format_price($subtotal) ?></span></div>
         <div class="flex justify-between text-black/60"><span>Shipping</span><span><?= $shippingFee === 0.0 ? 'Free' : format_price($shippingFee) ?></span></div>
         <div class="flex justify-between text-black/60"><span>Tax (GST <?= (int) $gstPercent ?>%)</span><span><?= format_price($tax) ?></span></div>
-        <div class="flex justify-between text-black/60" id="cod-fee-row"><span>COD Handling Fee</span><span id="cod-fee-amount">₹49</span></div>
+        <div class="flex justify-between text-black/60"><span>COD Handling Fee</span><span>₹49</span></div>
       </div>
 
       <div class="mt-4 flex justify-between border-t border-black/10 pt-4 text-base font-semibold text-brand-ink">
         <span>Total</span>
-        <span id="checkout-total"><?= format_price($subtotal + $shippingFee + $tax + 49) ?></span>
+        <span><?= format_price($subtotal + $shippingFee + $tax + 49) ?></span>
       </div>
 
       <button type="submit" class="btn-primary mt-6 w-full">Place Order</button>
@@ -320,29 +305,4 @@ require __DIR__ . '/../Views/layout_open.php';
     </form>
   </div>
 </div>
-<script>
-(function () {
-  var summary = document.querySelector('[data-order-summary]');
-  var codRow = document.getElementById('cod-fee-row');
-  var totalEl = document.getElementById('checkout-total');
-  if (!summary || !codRow || !totalEl) return;
-  var subtotal = parseFloat(summary.dataset.subtotal || '0');
-  var shipping = parseFloat(summary.dataset.shipping || '0');
-  var tax = parseFloat(summary.dataset.tax || '0');
-  function formatPrice(n) {
-    return '₹' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  }
-  function recompute() {
-    var selected = document.querySelector('[data-cod-toggle]:checked');
-    var isCod = selected && selected.value === 'COD';
-    codRow.classList.toggle('hidden', !isCod);
-    var codFee = isCod ? 49 : 0;
-    totalEl.textContent = formatPrice(subtotal + shipping + tax + codFee);
-  }
-  document.querySelectorAll('[data-cod-toggle]').forEach(function (el) {
-    el.addEventListener('change', recompute);
-  });
-  recompute();
-})();
-</script>
 <?php require __DIR__ . '/../Views/layout_close.php'; ?>

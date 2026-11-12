@@ -35,11 +35,6 @@ $SETTINGS_SECTIONS = [
         ['key' => 'searchConsoleVerification', 'label' => 'Google Search Console Verification Code'],
     ]],
     'payment' => ['label' => 'Payment Settings', 'fields' => [
-        ['key' => 'codEnabled', 'label' => 'Cash on Delivery', 'type' => 'checkbox'],
-        ['key' => 'upiEnabled', 'label' => 'UPI', 'type' => 'checkbox'],
-        ['key' => 'cardEnabled', 'label' => 'Credit / Debit Card', 'type' => 'checkbox'],
-        ['key' => 'netbankingEnabled', 'label' => 'Net Banking', 'type' => 'checkbox'],
-        ['key' => 'walletEnabled', 'label' => 'Wallets', 'type' => 'checkbox'],
         ['key' => 'codFee', 'label' => 'COD Handling Fee (₹)', 'type' => 'number'],
         ['key' => 'codMaxOrderValue', 'label' => 'Max Order Value for COD (₹)', 'type' => 'number'],
     ]],
